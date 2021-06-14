@@ -94,13 +94,13 @@ def doKbartJobs():
     df = pd.concat(dfs)
     return(df)
 
-def runSumarize(df = None):
+def runSummarize(df = None):
     if df is None:
         df = doKbartJobs()
     output_df = df[['_package','access_type','_publication_status','publication_title']].groupby(['_package','access_type','_publication_status']).agg({'publication_title':'count'})
     print(output_df)
 
-def runSumarize2(df_all):
+def runSummarize2(df_all):
     packages = list(df_all['_package'].unique())
     for i,package in enumerate(packages):
         df = df_all.loc[df_all['_package']== package]
