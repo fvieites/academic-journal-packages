@@ -3,6 +3,7 @@ import requests
 import pandas as pd
 import json
 
+pd.set_option('display.max_colwidth', None)
 
 def downloadKbart(url,filename,folder):
     '''
@@ -10,6 +11,7 @@ def downloadKbart(url,filename,folder):
     '''
     downloadedKbart = {'completed':False,'log':'', 'filepath':None, 'content':None}
     try:
+        print('Downloading url: {0}'.format(url))
         if url:
             headers= loadHeaders()
             resp = requests.get(url, headers=headers)
@@ -87,7 +89,7 @@ def doKbartJobs():
     jobs = loadJobs(cfg['jobs_file'])
     folder = cfg['data_folder']
     dfs = []
-    for j in jobs.index:
+    for j,idx in enumerate(jobs.index):
         if jobs.iloc[j]['active'] == 1 and jobs.iloc[j]['type'] == 'kbart':
             df_tmp = getKbartAsDf(jobs.iloc[j]['url'],jobs.iloc[j]['name'],jobs.iloc[j]['code'],folder)
             dfs.append(df_tmp)
@@ -97,25 +99,28 @@ def doKbartJobs():
 def runSummarize(df = None):
     if df is None:
         df = doKbartJobs()
+    df.loc[df['access_type'] == 'F','access_type'] = '(F) free/oa'
+    df.loc[df['access_type'] == 'P','access_type'] = '(P) suscription'
     output_df = df[['_package','access_type','_publication_status','publication_title']].groupby(['_package','access_type','_publication_status']).agg({'publication_title':'count'})
-    print(output_df)
+    
+    return(output_df)
 
 def runSummarize2(df_all):
     packages = list(df_all['_package'].unique())
     for i,package in enumerate(packages):
         df = df_all.loc[df_all['_package']== package]
         print(str(df['_package_name'][0]))
-        print('\t{0} - {1} - Number of titles in the kbart file:{2}'.format(i,package,len(df.index)))
+        print('\t{0} - Number of titles in the kbart file:{1}'.format(package,len(df.index)))
         
         #titles without closed publication (active)
         df_actives = df[df['date_last_issue_online'].isna()]
-        print('\t{0} - {1} - Number of active titles:{2}'.format(i,package,len(df_actives.index)))
+        print('\t{0} - Number of active titles:{1}'.format(package,len(df_actives.index)))
 
         df_actives_free = df_actives[df_actives['access_type'] == 'F' ]
-        print('\t{0} - {1} - Number of free (e.g. Open Access or Free Access) active titles:{2}'.format(i,package,len(df_actives_free.index)))
+        print('\t{0} - Number of free (e.g. Open Access or Free Access) active titles:{1}'.format(package,len(df_actives_free.index)))
 
         df_actives_paid = df_actives[df_actives['access_type'] == 'P' ]
-        print('\t{0} - {1} - Number of paid (e.g. subscription) active titles:{2}'.format(i,package,len(df_actives_paid.index)))
+        print('\t{0} - Number of paid (e.g. subscription) active titles:{1}'.format(package,len(df_actives_paid.index)))
 
 
 def loadConfig():
