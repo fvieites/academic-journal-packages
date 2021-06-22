@@ -98,10 +98,12 @@ def doKbartJobs():
 
 def runSummarize(df = None):
     if df is None:
-        df = doKbartJobs()
-    df.loc[df['access_type'] == 'F','access_type'] = '(F) free/oa'
-    df.loc[df['access_type'] == 'P','access_type'] = '(P) subscription'
-    output_df = df[['_package','access_type','_publication_status','publication_title']].groupby(['_package','access_type','_publication_status']).agg({'publication_title':'count'})
+        df2 = doKbartJobs()
+    else:
+        df2 = df.copy()
+    df2.loc[df2['access_type'] == 'F','access_type'] = '(F) free/oa'
+    df2.loc[df2['access_type'] == 'P','access_type'] = '(P) subscription'
+    output_df = df2[['_package','access_type','_publication_status','publication_title']].groupby(['_package','access_type','_publication_status']).agg({'publication_title':'count'})
     
     return(output_df)
 
